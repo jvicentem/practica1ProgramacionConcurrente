@@ -84,38 +84,45 @@ public class WebProcessor {
 	
 	private void threadAction() {		
 		while(true) {
-			try { WebProcessor.smConcurrentThreadsLimit.acquire(); } catch (InterruptedException e) {e.printStackTrace();}
+			//Intento adquirir el semáforo para leer del fichero de urls
 			try { WebProcessor.smFile.acquire(); } catch (InterruptedException e) {e.printStackTrace();}
+			//Llegados a este punto, he adquirido el semáforo para leer del fichero de urls
 			String url = "";
 			try { 
+				//Leo la siguiente url del fichero
 				url = WebProcessor.br.readLine(); 
+				//Si url es null, eso quiere decir que he llegado al final del fichero
 				if(url == null){
+					//Libero el semáforo para leer del fichero de urls
 					WebProcessor.smFile.release();
-					WebProcessor.smConcurrentThreadsLimit.release();
 					return;
 				}
 			} 
 			catch (IOException e) { 
+				//Si ha ocurrido una excepción, libero el semáforo para leer del fichero de urls
 				WebProcessor.smFile.release();
-				WebProcessor.smConcurrentThreadsLimit.release();
 				return;
 			}
+			//Si se llega a este punto es que se ha leído la url correctamente y
+			//se libera el semáforo para leer del fichero de urls
 			WebProcessor.smFile.release();
+			//Se intenta adquirir el semáforo que regula el número de threads que están
+			//al mismo tiempo descargando una página web
+			try { WebProcessor.smConcurrentThreadsLimit.acquire(); } catch (InterruptedException e) {e.printStackTrace();}
 			JsoupWebSourceCodeDownloader downloader = new JsoupWebSourceCodeDownloader(url);
-			try{
+			try {
+				//Se descarga el código de la página web y se guarda en un archivo
 				String source = downloader.downloadSourceCode();
-				
 				File file = new File(getPath()+File.separator+extractNameFromUrl(url)+".html");
 				PrintWriter out = new PrintWriter(file);
 				out.println(source);
 				out.close();
-			}catch(IOException e){
-				WebProcessor.smFile.release();
-				WebProcessor.smConcurrentThreadsLimit.release();
+			} catch(IOException e){
 				//Escribir en log
+				//Intenta adquirir el semáforo para escribir en el archivo de log de errores
 				try { WebProcessor.smLog.acquire(); } catch(InterruptedException ie) {ie.printStackTrace();}
-
 				try {
+					//Escribe la url que ha fallado en el log
 					FileWriter logfile = new FileWriter("error_log.txt",true);
 					BufferedWriter logbw = new BufferedWriter(logfile);
 					logbw.write(url);
@@ -123,11 +130,17 @@ public class WebProcessor {
 					logbw.close();
 				} catch (IOException e1) {
 					e1.printStackTrace();
+				} finally {
+					//Libero el semáforo que regula el número de threads que están
+					//al mismo tiempo descargando una página web tanto si sólo se ha hecho 
+					//el bloque try como si se ha hecho el bloque catch también
+					WebProcessor.smLog.release();
 				}
-
-				WebProcessor.smLog.release();
-			}
-			WebProcessor.smConcurrentThreadsLimit.release();			
+			} finally {
+				//Libero el semáforo del log tanto si sólo se ha hecho 
+				//el bloque try como si se ha hecho el bloque catch también
+				WebProcessor.smConcurrentThreadsLimit.release();
+			}			
 		}
 	}
 	
