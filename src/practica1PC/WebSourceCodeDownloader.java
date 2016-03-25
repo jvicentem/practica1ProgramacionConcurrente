@@ -6,10 +6,10 @@ import org.jsoup.Connection;
 import org.jsoup.Connection.Response;
 import org.jsoup.Jsoup;
 
-public class JsoupWebSourceCodeDownloader {
+public class WebSourceCodeDownloader {
 	private String url;
 	
-	public JsoupWebSourceCodeDownloader(String url) {
+	public WebSourceCodeDownloader(String url) {
 		this.url = url;
 	}
 	
@@ -19,8 +19,6 @@ public class JsoupWebSourceCodeDownloader {
 	
 	public String downloadSourceCode() throws IOException {
 		Connection conn = Jsoup.connect(this.getUrl());
-
-		String html = "<html></html>";
 		
 		Response resp = conn.execute();
 
@@ -28,9 +26,7 @@ public class JsoupWebSourceCodeDownloader {
 			throw new IOException(Integer.toString(resp.statusCode()));
 		} 
 
-		html = conn.get().html();
-
-		return html;
+		return conn.get().html();
 	}
 
 }
