@@ -9,62 +9,51 @@ import java.util.concurrent.Semaphore;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+
 public class Downloader{
 	private BufferedReader reader;
 	private Semaphore readUrlSm;
 	private Semaphore writeLogSm;
 	private Semaphore concurrentThreadsSm;
 	private Semaphore countSm;
-	private Semaphore threadsRunningSm;
-	private Semaphore availablePermitsSm;
 	private int count;
 	private String path;
 
-	private final int SHOW_STATUS_INTERVAL = 3; //En segundos
+	private final static int SHOW_STATUS_INTERVAL = 3; //En segundos
 	
 	public Downloader(BufferedReader reader, 
 					    Semaphore readUrlSm, 
 					   Semaphore writeLogSm, 
 			  Semaphore concurrentThreadsSm, 
 						  Semaphore countSm,
-				 Semaphore threadsRunningSm,
-			   Semaphore availablePermitsSm,
 							    String path) {
 		this.reader = reader;
 		this.readUrlSm = readUrlSm;
 		this.writeLogSm = writeLogSm;
 		this.concurrentThreadsSm = concurrentThreadsSm;
 		this.countSm = countSm;
-		this.threadsRunningSm = threadsRunningSm;
-		this.availablePermitsSm = availablePermitsSm;
 		this.count = 0;
 		this.path = path;
 	}
 	
 	public void downloadsStatus() {
-		while(threadsRunning()) {
+		while(true) {
 			try { 
-				Thread.sleep(SHOW_STATUS_INTERVAL*1000); 
-				
-				getCountSm().acquire(); 
+				Thread.sleep((long) SHOW_STATUS_INTERVAL*1000); 
+				getCountSm().acquire();
 			} catch(InterruptedException e) {
 				break;
-			}
+			} 
 			
 			System.out.println(getCount()+" archivos descargados. "+LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")));
 			
 			getCountSm().release();			
 		}
 	}
-	
-	private boolean threadsRunning() {
-		return getThreadsRunningSm().availablePermits() > 0;
-	}
 
 	public void threadAction() {
-		getThreadsRunningSm().release();
-		
-		String url = readUrl();
+		InterruptedException exception = null;
+		String url = readUrl(exception);
 		
 		while(thereIsAWebsiteToDownload(url)) {
 			try{
@@ -72,85 +61,51 @@ public class Downloader{
 				saveCode(url, code);
 			} catch(IOException e) {
 				writeInLog(url);
+			} catch(InterruptedException e) {
+				exception = e;
 			}
-			
-			url = readUrl();
+			finally {
+				url = readUrl(exception);
+			}
 		}
 		
 		closeReader();
-		
-		try{ 
-			getThreadsRunningSm().acquire(); 
-		} catch(InterruptedException e) {
-			//System.out.println("InterruptedException threadAction "+Thread.currentThread().getName());
-			getThreadsRunningSm().acquireUninterruptibly();
-		}
-		
 	}
 	
-	private String readUrl() {
+	private String readUrl(InterruptedException exception) {
 		String url = null;
 		
-		try {
-			getReadUrlSm().acquire();
-		} catch(InterruptedException e) {
-			//System.out.println("InterruptedException readUrl "+Thread.currentThread().getName());
-			Thread.currentThread().interrupt();
-			return url;
-		}
-		
-		try {
-			url = getReader().readLine();
-		} catch(IOException e) {
-			return url;
-			//Error o que el reader se ha cerrado
-		} finally {
-			getReadUrlSm().release();
-			
-			if(Thread.currentThread().isInterrupted()) {
-				//System.out.println("isInterrupted readUrl "+Thread.currentThread().getName());
-				Thread.currentThread().interrupt();
-				url = null;
+		if(exception == null) {
+			try {
+				getReadUrlSm().acquire();
+			} catch(InterruptedException e) {
+				return url;
 			}
-		}		
+			
+			try {
+				url = getReader().readLine();
+			} catch(IOException e) {
+				//Error de I/O o que el reader se ha cerrado
+				return null;
+			} finally {
+				getReadUrlSm().release();
+			}					
+		}	
 		
 		return url;
 	}
 	
 	private boolean thereIsAWebsiteToDownload(String url) {
-		if(Thread.currentThread().isInterrupted()) {
-			Thread.currentThread().interrupt();
-				if(url != null) {
-					writeInLog(url);
-					return false;
-				}			
-		}
-
 		return url != null;
 	}
 	
 	private String downloadSourceCode(String url) throws IOException {
-		String code = "";
-		
-		//System.out.println("downloadSourceCode "+Thread.currentThread().interrupted()+" "+Thread.currentThread().getName());
+		String code;
 
 		try {
 			getConcurrentThreadsSm().acquire();
 		} catch(InterruptedException e) {
-			//System.out.println("InterruptedException downloadSourceCode "+Thread.currentThread().getName());
-			
-			Thread.currentThread().interrupt();
-			
-			getAvailablePermitsSm().acquireUninterruptibly();
-			
-			if(getConcurrentThreadsSm().availablePermits() >= 1) {
-				getConcurrentThreadsSm().acquireUninterruptibly();
-				getAvailablePermitsSm().release();
-			}
-			else {
-				getAvailablePermitsSm().release();
-				throw new IOException();
-			}
+			throw new IOException();
 		} 
 		
 		WebSourceCodeDownloader realDownloader = new WebSourceCodeDownloader(url);
@@ -160,14 +115,9 @@ public class Downloader{
 		} catch(IOException e) {
 			throw e;
 		} finally {
-			getAvailablePermitsSm().acquireUninterruptibly();
-			
 			getConcurrentThreadsSm().release();
-			
-			getAvailablePermitsSm().release();
 		}			
-
-		//System.out.println("downloadSourceCode end "+Thread.currentThread().interrupted()+" "+Thread.currentThread().getName());
+		
 		return code;
 	}
 	
@@ -175,43 +125,41 @@ public class Downloader{
 		try {
 			getWriteLogSm().acquire();
 		} catch(InterruptedException e) {
-			//System.out.println("InterruptedException writeInLog "+Thread.currentThread().getName());
-			Thread.currentThread().interrupt();
-			getWriteLogSm().acquireUninterruptibly();
+			return;
+		} 
+		
+		try{
+			FileAndFolderUtils.writeAtEndOfFile(Menu.LOG_FILE_NAME, url);
+		} catch(IOException e) {
+			e.printStackTrace();
 		} finally {
-			try{
-				FileAndFolderUtils.writeAtEndOfFile(Menu.LOG_FILE_NAME, url);
-			} catch(IOException e) {
-
-			} finally {
-				getWriteLogSm().release();
-			}			
-		}
+			getWriteLogSm().release();
+		}			
 	}
 	
-	private void saveCode(String url, String code) throws IOException {
-		//System.out.println("saveCode "+Thread.currentThread().interrupted()+" "+Thread.currentThread().getName());
+	private void saveCode(String url, String code) throws IOException, InterruptedException {
 		FileAndFolderUtils.writeFile(getPath()+File.separator+extractNameFromUrl(url)+".html", code);
-		increaseCount();
-		//System.out.println("saveCode end "+Thread.currentThread().interrupted()+" "+Thread.currentThread().getName());
+		
+		try{
+			increaseCount();
+		} catch(InterruptedException e) {
+			throw e;
+		}
+		
 	}
 	
-	private void increaseCount() {
-		//System.out.println("increaseCount "+Thread.currentThread().interrupted()+" "+Thread.currentThread().getName());
+	private void increaseCount() throws InterruptedException {
 		try{
 			getCountSm().acquire();
 		} catch(InterruptedException e) {
-			//System.out.println("InterruptedException increaseCount "+Thread.currentThread().getName());
-			Thread.currentThread().interrupt();
-			getCountSm().acquireUninterruptibly();
+			throw e;
 		} finally {
 			setCount(getCount() + 1);
-			getCountSm().release();
-		}
-		//System.out.println("increaseCount end "+Thread.currentThread().interrupted()+" "+Thread.currentThread().getName());
+			getCountSm().release();	
+		}		
 	}
 	
-	private String extractNameFromUrl(String url) {
+	private static String extractNameFromUrl(String url) {
 	     String pattern = "http://www.(.*)/";
 	     Pattern r = Pattern.compile(pattern);
 	     Matcher m = r.matcher(url);
@@ -223,18 +171,15 @@ public class Downloader{
 		try{
 			getReadUrlSm().acquire();
 		} catch(InterruptedException e) {
-			//System.out.println("InterruptedException closeReader "+Thread.currentThread().getName());
-			Thread.currentThread().interrupt();
-			getReadUrlSm().acquireUninterruptibly();
-		} 
-		finally {
+			//No manejo la interrupción para que el reader se cierre siempre
+		} finally {
 			try{
 				getReader().close();
 			} catch(IOException e) {
-				
+				e.printStackTrace();
 			} finally {
 				getReadUrlSm().release();
-			}
+			}	
 		}
 	}
 	
@@ -260,14 +205,6 @@ public class Downloader{
 	
 	private Semaphore getCountSm() {
 		return countSm;
-	}
-	
-	private Semaphore getThreadsRunningSm() {
-		return threadsRunningSm;
-	}
-	
-	private Semaphore getAvailablePermitsSm() {
-		return availablePermitsSm;
 	}
 
 	private int getCount() {

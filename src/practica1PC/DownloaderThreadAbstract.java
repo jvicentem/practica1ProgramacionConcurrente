@@ -1,6 +1,6 @@
 package practica1PC;
 
-public class DownloaderThreadAbstract extends Thread {
+public abstract class DownloaderThreadAbstract extends Thread {
 	private Downloader downloader;
 	
 	public DownloaderThreadAbstract(Downloader downloader, String threadName) {
@@ -11,4 +11,7 @@ public class DownloaderThreadAbstract extends Thread {
 	protected Downloader getDownloader() {
 		return downloader;
 	}
+	
+	@Override
+	public abstract void run();
 }

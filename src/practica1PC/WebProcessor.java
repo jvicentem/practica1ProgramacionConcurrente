@@ -35,14 +35,14 @@ public class WebProcessor {
 	public void process(String fileName) {
 		ThreadFactory threadFactory = new ThreadFactory(fileName, getPath(), getMaxDown());
 		
-		List<DownloaderThreadAbstract> thds = new ArrayList<DownloaderThreadAbstract>(getNDown()+1);
+		List<DownloaderThreadAbstract> thds = new ArrayList<>(getNDown());
 		
 		for (int i = 0; i < getNDown(); i++) 
 			thds.add(threadFactory.createActionThread("Thread "+i));
 		
 		DownloaderThreadStatus statusThd = threadFactory.createStatusThread("Status thread");
-		thds.add(statusThd);
-
+		statusThd.start();
+		
 		for (DownloaderThreadAbstract th : thds)
 			th.start();
 
@@ -55,5 +55,7 @@ public class WebProcessor {
 				}
 				break;
 			}
+		
+		statusThd.interrupt();
 	}
 }

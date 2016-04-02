@@ -13,6 +13,7 @@ import java.nio.file.Paths;
 import org.apache.commons.io.FileUtils;
 
 public class FileAndFolderUtils {
+	private FileAndFolderUtils() {}
 	
 	public static void createFolder(String path) {
 		File folder = new File(path);
@@ -21,7 +22,6 @@ public class FileAndFolderUtils {
 			try {
 				FileUtils.forceDelete(folder);
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			folder.mkdirs();
@@ -47,7 +47,7 @@ public class FileAndFolderUtils {
 		try{
 			Files.deleteIfExists(Paths.get(filePath));
 		} catch(IOException e) {
-			
+			e.printStackTrace();
 		}
 	}
 	
@@ -57,12 +57,12 @@ public class FileAndFolderUtils {
 		return f.exists() && f.isFile();
 	}
 	
-	//ADVERTENCIA: Usar este método sólo cuando se esté seguro de que el archivo existe
-	public static BufferedReader openFileNoException(String filePath) {
+	public static BufferedReader openFile(String filePath) throws FileNotFoundException {
 		try {
 			return new BufferedReader(new FileReader(filePath));
 		} catch(FileNotFoundException e) {
-			return null;
+			throw e;
 		}
 	}
+
 }

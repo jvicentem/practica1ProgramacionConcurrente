@@ -1,41 +1,67 @@
 package practica1PC;
 
 import java.io.BufferedReader;
+import java.io.FileNotFoundException;
 import java.util.concurrent.Semaphore;
 
 public class ThreadFactory {
+	private String fileName;
 	private BufferedReader file;
 	private Semaphore fileSm;
 	private Semaphore logSm;
 	private Semaphore concurrentSm;
 	private Semaphore countSm;
-	private Semaphore runningThdsSm;
-	private Semaphore availablePermitsSm;
 	private String path;
 	private Downloader downloader;
 
 	public ThreadFactory(String fileName, String path, int maxConcurrent) {
-		this.file = FileAndFolderUtils.openFileNoException(fileName);
+		this.fileName = fileName;
 		this.fileSm = new Semaphore(1);
 		this.logSm = new Semaphore(1);
 		this.concurrentSm = new Semaphore(maxConcurrent);
 		this.countSm = new Semaphore(1);
-		this.runningThdsSm = new Semaphore(0);
-		this.availablePermitsSm = new Semaphore(1);
 		this.path = path;
-		this.downloader = new Downloader(getFile(), getFileSm(), getLogSm(), getConcurrentSm(), getCountSm(), getRunningThdsSm(), getAvailablePermitsSm(), getPath());
+		this.downloader = null;
 	}
 	
 	public DownloaderThreadAction createActionThread(String threadName) {
+		try {
+			createDownloaderObject();
+		} catch(FileNotFoundException e) {
+			e.printStackTrace();
+		}
+		
 		return new DownloaderThreadAction(getDownloader(), threadName);
 	}
-	
+
 	public DownloaderThreadStatus createStatusThread(String threadName) {
+		try {
+			createDownloaderObject();
+		} catch(FileNotFoundException e) {		
+			e.printStackTrace();
+		}
+		
 		return new DownloaderThreadStatus(getDownloader(), threadName);
+	}
+	
+	private void createDownloaderObject() throws FileNotFoundException {
+		if(getFile() == null) {
+			try {
+				setFile(FileAndFolderUtils.openFile(getfileName()));
+			} catch(FileNotFoundException e) {
+				throw e;
+			}
+			
+			setDownloader(new Downloader(getFile(), getFileSm(), getLogSm(), getConcurrentSm(), getCountSm(), getPath()));
+		}		
 	}
 
 	private BufferedReader getFile() {
 		return file;
+	}
+	
+	private void setFile(BufferedReader file) {
+		this.file = file;
 	}
 
 	private Semaphore getFileSm() {
@@ -53,14 +79,6 @@ public class ThreadFactory {
 	private Semaphore getCountSm() {
 		return countSm;
 	}
-	
-	private Semaphore getRunningThdsSm() {
-		return runningThdsSm;
-	}
-	
-	private Semaphore getAvailablePermitsSm() {
-		return availablePermitsSm;
-	}
 
 	private String getPath() {
 		return path;
@@ -68,6 +86,14 @@ public class ThreadFactory {
 	
 	private Downloader getDownloader() {
 		return downloader;
+	}
+	
+	private void setDownloader(Downloader downloader) {
+		this.downloader = downloader;
+	}
+	
+	private String getfileName() {
+		return fileName;
 	}
 	
 }
