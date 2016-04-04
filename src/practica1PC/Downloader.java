@@ -41,13 +41,11 @@ public class Downloader{
 			try { 
 				Thread.sleep((long) SHOW_STATUS_INTERVAL*1000); 
 				getCountSm().acquire();
+				System.out.println(getCount()+" archivos descargados. "+LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")));
+				getCountSm().release();	
 			} catch(InterruptedException e) {
-				break;
+				return;
 			} 
-			
-			System.out.println(getCount()+" archivos descargados. "+LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")));
-			
-			getCountSm().release();			
 		}
 	}
 
