@@ -22,24 +22,14 @@ public class Menu {
 		
 	    Thread th = startWebProcessorThread(folderPath, urlsFilePath);
 	    
-	    Thread stopThread = new Thread(() -> {
-	    										System.out.println("> Presiona ENTER para cancelar las descargas");
-	    										try {
-	    											reader.readLine(); 		
-	    										} catch(Exception e) {
-	    											e.printStackTrace();
-	    										} 
-    											th.interrupt();
-    											System.out.println("Descargas canceladas por usuario"); 
-	    									 }
-	    							  , "Stop thread");
+	    Thread stopThread = createStopThread(th);
+	    
 	    stopThread.start();
 
 	    try {
 			th.join();
-			reader.close();
-			System.in.close();
 			stopThread.interrupt();
+			reader.close();
 		} catch (InterruptedException e) { 
 			e.printStackTrace();
 		} 
@@ -75,6 +65,30 @@ public class Menu {
 	    th.start();		
 	    
 	    return th;
+	}
+	
+	private static Thread createStopThread(Thread threadToStop) {
+		return new Thread(() -> {
+			System.out.println("> Presiona CUALQUIER tecla para cancelar las descargas");
+			
+			try {
+				while(System.in.available() == 0) {
+					try {
+						Thread.sleep(500);
+					} catch(InterruptedException e) {
+						//Este thread se interrumpe, es decir, el programa
+						//ha acabado correctamente
+						return;
+					}
+				}
+				
+				threadToStop.interrupt();
+				System.out.println("Descargas canceladas por usuario"); 													
+			} catch (IOException e) {
+				e.printStackTrace();
+			}	    									
+		 }
+		, "Stop thread");		
 	}
 	
 }
