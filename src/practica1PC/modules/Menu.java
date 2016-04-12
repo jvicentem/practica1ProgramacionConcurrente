@@ -1,8 +1,10 @@
-package practica1PC;
+package practica1PC.modules;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+
+import practica1PC.utils.FileAndFolderUtils;
 
 public class Menu {
 	public static final String LOG_FILE_NAME = "error_log.txt";

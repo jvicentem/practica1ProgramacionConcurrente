@@ -1,4 +1,6 @@
-package practica1PC;
+package practica1PC.modules.threads;
+
+import practica1PC.modules.Downloader;
 
 public class DownloaderThreadAction extends DownloaderThreadAbstract {
 	

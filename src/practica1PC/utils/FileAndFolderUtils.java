@@ -1,4 +1,4 @@
-package practica1PC;
+package practica1PC.utils;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -24,8 +24,9 @@ public class FileAndFolderUtils {
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-			folder.mkdirs();
-		}		
+		}	
+		
+		folder.mkdirs();
 	}
 	
 	public static void writeFile(String filePath, String text) throws IOException {

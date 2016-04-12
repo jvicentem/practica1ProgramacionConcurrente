@@ -1,13 +1,17 @@
-package practica1PC;
+package practica1PC.modules;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.concurrent.Semaphore;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import practica1PC.utils.FileAndFolderUtils;
+import practica1PC.utils.WebSourceCodeDownloader;
 
 
 public class Downloader{
@@ -136,7 +140,16 @@ public class Downloader{
 	}
 	
 	private void saveCode(String url, String code) throws IOException, InterruptedException {
-		FileAndFolderUtils.writeFile(getPath()+File.separator+extractNameFromUrl(url)+".html", code);
+		String hostName = "";
+		
+		try {
+			hostName = extractNameFromUrl(url);
+		}
+		catch(MalformedURLException e) {
+			throw new IOException();
+		}
+		
+		FileAndFolderUtils.writeFile(getPath()+File.separator+hostName+".html", code);
 		
 		try{
 			increaseCount();
@@ -157,12 +170,16 @@ public class Downloader{
 		}		
 	}
 	
-	private static String extractNameFromUrl(String url) {
-	     String pattern = "http://www.(.*)/";
+	private static String extractNameFromUrl(String url) throws MalformedURLException {
+		 String pattern = "http://www.(.*)/?";
 	     Pattern r = Pattern.compile(pattern);
 	     Matcher m = r.matcher(url);
-	     m.find();
-	     return m.group(1);
+	     
+    	 if(m.find()) {
+    		 return m.group(1);
+    	 } else {
+	    	 throw new MalformedURLException("No es una URL válida");
+    	 }
 	}
 	
 	private void closeReader(){

@@ -1,4 +1,4 @@
-package practica1PC;
+package practica1PC.utils;
 
 import java.io.IOException;
 

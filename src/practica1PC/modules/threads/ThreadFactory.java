@@ -1,8 +1,11 @@
-package practica1PC;
+package practica1PC.modules.threads;
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.util.concurrent.Semaphore;
+
+import practica1PC.modules.Downloader;
+import practica1PC.utils.FileAndFolderUtils;
 
 public class ThreadFactory {
 	private String fileName;

@@ -1,7 +1,11 @@
-package practica1PC;
+package practica1PC.modules;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import practica1PC.modules.threads.DownloaderThreadAbstract;
+import practica1PC.modules.threads.DownloaderThreadStatus;
+import practica1PC.modules.threads.ThreadFactory;
 
 public class WebProcessor {
 	private String path;
