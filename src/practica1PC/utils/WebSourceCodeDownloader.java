@@ -18,15 +18,22 @@ public class WebSourceCodeDownloader {
 	}
 	
 	public String downloadSourceCode() throws IOException {
-		Connection conn = Jsoup.connect(this.getUrl());
-		
-		Response resp = conn.execute();
+			Connection conn = Jsoup.connect(this.getUrl());
+			
+			Response resp; 
+			
+			try {
+				resp = conn.execute();
+			} catch(IllegalArgumentException e) {
+				System.err.println(getUrl());
+				throw new IOException("IllegalArgumentException "+e.getMessage());
+			}
 
-		if (resp.statusCode() != 200) {
-			throw new IOException(Integer.toString(resp.statusCode()));
-		} 
+			if (resp.statusCode() != 200) {
+				throw new IOException(Integer.toString(resp.statusCode()));
+			} 
 
-		return conn.get().html();
+			return conn.get().html();			
 	}
 
 }

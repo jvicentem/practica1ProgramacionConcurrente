@@ -88,7 +88,7 @@ public class Downloader{
 				url = getReader().readLine();
 			} catch(IOException e) {
 				//Error de I/O o que el reader se ha cerrado
-				return null;
+				return "Error I/O al leer línea";
 			} finally {
 				getReadUrlSm().release();
 			}					
