@@ -76,32 +76,30 @@ public class Downloader{
 	private String readUrl() {
 		try {
 			getReadUrlSm().acquire();
-		} catch (InterruptedException e) {
-			return null;
-		}
-		
-		String line = "";
-		
-		try {
-			line = getReader().readLine();	
+
+			String line = getReader().readLine();	
 			
-			if (line == null) { //Si ha llegado al final del fichero...
-				return null;
-			} 
-		} catch (IOException e) {
-			//Error de I/O o que el reader se ha cerrado
-			return null;
-		} finally {
 			getReadUrlSm().release();
-		}		
-		
-		StringBuilder url = new StringBuilder(line);
-		
-		if (url.charAt(url.length()-1) == '/') {
-			url.deleteCharAt(url.length()-1);
+			
+			if (line == null)
+				//Si ha llegado al final del fichero...
+				throw new IOException("Fin de fichero"); 
+
+			StringBuilder url = new StringBuilder(line);
+			
+			int lastPosition = url.length()-1;
+			
+			if (url.charAt(lastPosition) == '/') 
+				url.deleteCharAt(lastPosition);
+			
+			return url.toString();
 		}
-		
-		return url.toString();
+		catch (IOException | InterruptedException e) {
+			if (e instanceof IOException)
+				getReadUrlSm().release();
+			
+			return null;
+		} 	
 	}
 	
 	private boolean thereIsAWebsiteToDownload(String url) {
