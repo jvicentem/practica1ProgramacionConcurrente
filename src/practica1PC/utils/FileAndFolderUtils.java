@@ -18,7 +18,7 @@ public class FileAndFolderUtils {
 	public static void createFolder(String path) {
 		File folder = new File(path);
 		
-		if(folder.isDirectory()){
+		if (folder.isDirectory()) {
 			try {
 				FileUtils.forceDelete(folder);
 			} catch (IOException e) {
@@ -45,9 +45,9 @@ public class FileAndFolderUtils {
 	}
 	
 	public static void deleteFileIfExists(String filePath) {
-		try{
+		try {
 			Files.deleteIfExists(Paths.get(filePath));
-		} catch(IOException e) {
+		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
@@ -61,7 +61,7 @@ public class FileAndFolderUtils {
 	public static BufferedReader openFile(String filePath) throws FileNotFoundException {
 		try {
 			return new BufferedReader(new FileReader(filePath));
-		} catch(FileNotFoundException e) {
+		} catch (FileNotFoundException e) {
 			throw e;
 		}
 	}

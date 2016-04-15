@@ -9,9 +9,9 @@ import practica1PC.utils.FileAndFolderUtils;
 public class Menu {
 	public static final String LOG_FILE_NAME = "error_log.txt";
 	
-	private static final int NUMBER_OF_THREATS = 5;
+	private static final int NUMBER_OF_THREATS = 6;
 	
-	private static final int MAX_CONCURRENT_THREATS = 2;
+	private static final int MAX_CONCURRENT_THREATS = 4;
 	
 	private Menu() {}
 	
@@ -42,7 +42,7 @@ public class Menu {
 		System.out.println("> Introduce el fichero con las páginas web que quieres descargar");
 		String urlsFilePath = reader.readLine();
 		
-		while(! FileAndFolderUtils.validFilePath(urlsFilePath)) {
+		while (! FileAndFolderUtils.validFilePath(urlsFilePath)) {
 			System.out.println(">> Ruta de archivo no válida. Por favor, vuelva a introducir una ruta correcta:");
 			urlsFilePath = reader.readLine();
 		}
@@ -71,13 +71,13 @@ public class Menu {
 	
 	private static Thread createStopThread(Thread threadToStop) {
 		return new Thread(() -> {
-			System.out.println("> Presiona CUALQUIER tecla para cancelar las descargas");
+			System.out.println("> Presiona ENTER para cancelar las descargas");
 			
 			try {
-				while(System.in.available() == 0) {
+				while (System.in.available() == 0) {
 					try {
 						Thread.sleep(500);
-					} catch(InterruptedException e) {
+					} catch (InterruptedException e) {
 						//Este thread se interrumpe, es decir, el programa
 						//ha acabado correctamente
 						return;

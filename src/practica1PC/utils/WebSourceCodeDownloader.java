@@ -7,33 +7,20 @@ import org.jsoup.Connection.Response;
 import org.jsoup.Jsoup;
 
 public class WebSourceCodeDownloader {
-	private String url;
+	private WebSourceCodeDownloader() {}
 	
-	public WebSourceCodeDownloader(String url) {
-		this.url = url;
-	}
-	
-	private String getUrl() {
-		return this.url;
-	}
-	
-	public String downloadSourceCode() throws IOException {
-			Connection conn = Jsoup.connect(this.getUrl());
+	public static String downloadSourceCode(String url) throws IOException {
+		Connection conn = Jsoup.connect(url);
 			
-			Response resp; 
-			
-			try {
-				resp = conn.execute();
-			} catch(IllegalArgumentException e) {
-				System.err.println(getUrl());
-				throw new IOException("IllegalArgumentException "+e.getMessage());
-			}
+		Response resp; 
+		
+		resp = conn.execute();
 
-			if (resp.statusCode() != 200) {
-				throw new IOException(Integer.toString(resp.statusCode()));
-			} 
+		if (resp.statusCode() != 200) {
+			throw new IOException(Integer.toString(resp.statusCode()));
+		} 
 
-			return conn.get().html();			
+		return conn.get().html();			
 	}
 
 }

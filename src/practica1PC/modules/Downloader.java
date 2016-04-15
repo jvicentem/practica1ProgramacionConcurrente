@@ -41,60 +41,67 @@ public class Downloader{
 	}
 	
 	public void downloadsStatus() {
-		while(true) {
+		while (true) {
 			try { 
 				Thread.sleep((long) SHOW_STATUS_INTERVAL*1000); 
 				getCountSm().acquire();
 				System.out.println(getCount()+" archivos descargados. "+LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")));
 				getCountSm().release();	
-			} catch(InterruptedException e) {
+			} catch (InterruptedException e) {
 				return;
 			} 
 		}
 	}
 
 	public void threadAction() {
-		InterruptedException exception = null;
-		String url = readUrl(exception);
+		String url = readUrl();
 		
-		while(thereIsAWebsiteToDownload(url)) {
-			try{
+		while (thereIsAWebsiteToDownload(url)) {
+			try {
 				String code = downloadSourceCode(url);
 				saveCode(url, code);
-			} catch(IOException e) {
+			} catch (IOException e) {
 				writeInLog(url);
-			} catch(InterruptedException e) {
-				exception = e;
+			} catch (InterruptedException e) {
+				break;
 			}
 			finally {
-				url = readUrl(exception);
+				url = readUrl();
 			}
 		}
 		
 		closeReader();
 	}
 	
-	private String readUrl(InterruptedException exception) {
-		String url = null;
+	private String readUrl() {
+		try {
+			getReadUrlSm().acquire();
+		} catch (InterruptedException e) {
+			return null;
+		}
 		
-		if(exception == null) {
-			try {
-				getReadUrlSm().acquire();
-			} catch(InterruptedException e) {
-				return url;
-			}
+		String line = "";
+		
+		try {
+			line = getReader().readLine();	
 			
-			try {
-				url = getReader().readLine();
-			} catch(IOException e) {
-				//Error de I/O o que el reader se ha cerrado
-				return "Error I/O al leer línea";
-			} finally {
-				getReadUrlSm().release();
-			}					
-		}	
+			if (line == null) { //Si ha llegado al final del fichero...
+				return null;
+			} 
+		} catch (IOException e) {
+			//Error de I/O o que el reader se ha cerrado
+			return null;
+		} finally {
+			getReadUrlSm().release();
+		}		
 		
-		return url;
+		StringBuilder url = new StringBuilder(line);
+		
+		if (url.charAt(url.length()-1) == '/') {
+			url.deleteCharAt(url.length()-1);
+		}
+		
+		return url.toString();
 	}
 	
 	private boolean thereIsAWebsiteToDownload(String url) {
@@ -102,19 +109,17 @@ public class Downloader{
 	}
 	
 	private String downloadSourceCode(String url) throws IOException {
-		String code;
-
 		try {
 			getConcurrentThreadsSm().acquire();
-		} catch(InterruptedException e) {
+		} catch (InterruptedException e) {
 			throw new IOException();
 		} 
 		
-		WebSourceCodeDownloader realDownloader = new WebSourceCodeDownloader(url);
+		String code = "";
 		
-		try{
-			code = realDownloader.downloadSourceCode();
-		} catch(IOException e) {
+		try {
+			code = WebSourceCodeDownloader.downloadSourceCode(url);
+		} catch (IOException e) {
 			throw e;
 		} finally {
 			getConcurrentThreadsSm().release();
@@ -126,13 +131,13 @@ public class Downloader{
 	private void writeInLog(String url) {
 		try {
 			getWriteLogSm().acquire();
-		} catch(InterruptedException e) {
+		} catch (InterruptedException e) {
 			return;
 		} 
 		
-		try{
+		try {
 			FileAndFolderUtils.writeAtEndOfFile(Menu.LOG_FILE_NAME, url);
-		} catch(IOException e) {
+		} catch (IOException e) {
 			e.printStackTrace();
 		} finally {
 			getWriteLogSm().release();
@@ -145,24 +150,24 @@ public class Downloader{
 		try {
 			hostName = extractNameFromUrl(url);
 		}
-		catch(MalformedURLException e) {
+		catch (MalformedURLException e) {
 			throw new IOException();
 		}
 		
 		FileAndFolderUtils.writeFile(getPath()+File.separator+hostName+".html", code);
 		
-		try{
+		try {
 			increaseCount();
-		} catch(InterruptedException e) {
+		} catch (InterruptedException e) {
 			throw e;
 		}
 		
 	}
 	
 	private void increaseCount() throws InterruptedException {
-		try{
+		try {
 			getCountSm().acquire();
-		} catch(InterruptedException e) {
+		} catch (InterruptedException e) {
 			throw e;
 		} finally {
 			setCount(getCount() + 1);
@@ -175,7 +180,7 @@ public class Downloader{
 	     Pattern r = Pattern.compile(pattern);
 	     Matcher m = r.matcher(url);
 	     
-    	 if(m.find()) {
+    	 if (m.find()) {
     		 return m.group(1);
     	 } else {
 	    	 throw new MalformedURLException("No es una URL válida");
@@ -183,14 +188,14 @@ public class Downloader{
 	}
 	
 	private void closeReader(){
-		try{
+		try {
 			getReadUrlSm().acquire();
-		} catch(InterruptedException e) {
+		} catch (InterruptedException e) {
 			//No manejo la interrupción para que el reader se cierre siempre
 		} finally {
-			try{
+			try {
 				getReader().close();
-			} catch(IOException e) {
+			} catch (IOException e) {
 				e.printStackTrace();
 			} finally {
 				getReadUrlSm().release();
