@@ -16,60 +16,48 @@ public class Menu {
 	private Menu() {}
 	
 	public static void execute() throws IOException {
-		BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+		BufferedReader keyboardReader = new BufferedReader(new InputStreamReader(System.in));
 
-		String urlsFilePath = requestUrlsFilePath(reader);
+		String urlsFilePath = requestUrlsFilePath(keyboardReader);
 		
-		String folderPath = requestFolderPath(reader);
+		String folderPath = requestFolderPath(keyboardReader);
 		
-	    Thread th = startWebProcessorThread(folderPath, urlsFilePath);
-	    
-	    Thread stopThread = createStopThread(th);
+	    Thread stopThread = createStopThread(Thread.currentThread(), keyboardReader);
 	    
 	    stopThread.start();
-
-	    try {
-			th.join();
-			stopThread.interrupt();
-			reader.close();
-		} catch (InterruptedException e) { 
-			e.printStackTrace();
-		} 
+		
+	    startWebProcessor(folderPath, urlsFilePath);
 	    
+		stopThread.interrupt();
 	}
 	
-	private static String requestUrlsFilePath(BufferedReader reader) throws IOException {
+	private static String requestUrlsFilePath(BufferedReader keyboardReader) throws IOException {
 		System.out.println("> Introduce el fichero con las páginas web que quieres descargar");
-		String urlsFilePath = reader.readLine();
+		String urlsFilePath = keyboardReader.readLine();
 		
 		while (! FileAndFolderUtils.validFilePath(urlsFilePath)) {
 			System.out.println(">> Ruta de archivo no válida. Por favor, vuelva a introducir una ruta correcta:");
-			urlsFilePath = reader.readLine();
+			urlsFilePath = keyboardReader.readLine();
 		}
 		
 		return urlsFilePath;		
 	}
 	
-	private static String requestFolderPath(BufferedReader reader) throws IOException {
+	private static String requestFolderPath(BufferedReader keyboardReader) throws IOException {
 	    System.out.println("> Introduce el directorio donde quieres guardar las descargas");
-	    String folderPath = reader.readLine();
+	    String folderPath = keyboardReader.readLine();
 	    FileAndFolderUtils.createFolder(folderPath);
 	    
 	    return folderPath;
 	}
 	
-	private static Thread startWebProcessorThread(String folderPath, String urlsFilePath) {
+	private static void startWebProcessor(String folderPath, String urlsFilePath) {
 		WebProcessor wp = new WebProcessor(folderPath, Menu.NUMBER_OF_THREATS, Menu.MAX_CONCURRENT_THREATS);
-		
-		Thread th = new Thread(() -> wp.process(urlsFilePath), "Process tread");
 		FileAndFolderUtils.deleteFileIfExists(Menu.LOG_FILE_NAME);
-		
-	    th.start();		
-	    
-	    return th;
+		wp.process(urlsFilePath);
 	}
 	
-	private static Thread createStopThread(Thread threadToStop) {
+	private static Thread createStopThread(Thread threadToStop, BufferedReader keyboardReader) {
 		return new Thread(() -> {
 			System.out.println("> Presiona ENTER para cancelar las descargas");
 			
@@ -80,10 +68,12 @@ public class Menu {
 					} catch (InterruptedException e) {
 						//Este thread se interrumpe, es decir, el programa
 						//ha acabado correctamente
+						keyboardReader.close();
 						return;
 					}
 				}
 				
+				keyboardReader.close();
 				threadToStop.interrupt();
 				System.out.println("Descargas canceladas por usuario"); 													
 			} catch (IOException e) {
