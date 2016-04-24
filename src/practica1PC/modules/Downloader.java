@@ -23,7 +23,7 @@ public class Downloader{
 	private int count;
 	private String path;
 
-	private final static int SHOW_STATUS_INTERVAL = 3; //En segundos
+	private static final int SHOW_STATUS_INTERVAL = 3; //En segundos
 	
 	public Downloader(BufferedReader reader, 
 					    Semaphore readUrlSm, 
@@ -102,23 +102,17 @@ public class Downloader{
 		} 	
 	}
 	
-	private boolean thereIsAWebsiteToDownload(String url) {
+	private static boolean thereIsAWebsiteToDownload(String url) {
 		return url != null;
 	}
 	
-	private String downloadSourceCode(String url) throws IOException {
-		try {
-			getConcurrentThreadsSm().acquire();
-		} catch (InterruptedException e) {
-			throw new IOException();
-		} 
-		
+	private String downloadSourceCode(String url) throws IOException, InterruptedException {
+		getConcurrentThreadsSm().acquire();
+
 		String code = "";
 		
 		try {
 			code = WebSourceCodeDownloader.downloadSourceCode(url);
-		} catch (IOException e) {
-			throw e;
 		} finally {
 			getConcurrentThreadsSm().release();
 		}			
@@ -149,24 +143,17 @@ public class Downloader{
 			hostName = extractNameFromUrl(url);
 		}
 		catch (MalformedURLException e) {
-			throw new IOException();
+			throw new IOException(e.getMessage());
 		}
 		
 		FileAndFolderUtils.writeFile(getPath()+File.separator+hostName+".html", code);
 		
-		try {
-			increaseCount();
-		} catch (InterruptedException e) {
-			throw e;
-		}
-		
+		increaseCount();
 	}
 	
 	private void increaseCount() throws InterruptedException {
 		try {
 			getCountSm().acquire();
-		} catch (InterruptedException e) {
-			throw e;
 		} finally {
 			setCount(getCount() + 1);
 			getCountSm().release();	

@@ -15,7 +15,7 @@ public class Menu {
 	
 	private Menu() {}
 	
-	public static void execute() throws IOException {
+	public static final void execute() throws IOException {
 		BufferedReader keyboardReader = new BufferedReader(new InputStreamReader(System.in));
 
 		String urlsFilePath = requestUrlsFilePath(keyboardReader);
@@ -29,6 +29,8 @@ public class Menu {
 	    startWebProcessor(folderPath, urlsFilePath);
 	    
 		stopThread.interrupt();
+		
+		System.out.println("Programa finalizado");
 	}
 	
 	private static String requestUrlsFilePath(BufferedReader keyboardReader) throws IOException {
