@@ -146,7 +146,7 @@ public class Downloader{
 			throw new IOException(e.getMessage());
 		}
 		
-		FileAndFolderUtils.writeFile(getPath()+File.separator+hostName+".html", code);
+		FileAndFolderUtils.writeFile(getPath() + File.separator+hostName + ".html", code);
 		
 		increaseCount();
 	}
