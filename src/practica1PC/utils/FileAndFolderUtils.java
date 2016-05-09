@@ -37,11 +37,11 @@ public class FileAndFolderUtils {
 	}
 	
 	public static void writeAtEndOfFile(String filePath, String text) throws IOException {
-		FileWriter logfile = new FileWriter(filePath, true);
-		BufferedWriter logbw = new BufferedWriter(logfile);
-		logbw.write(text);
-		logbw.newLine();
-		logbw.close();		
+		FileWriter file = new FileWriter(filePath, true);
+		BufferedWriter bw = new BufferedWriter(file);
+		bw.write(text);
+		bw.newLine();
+		bw.close();		
 	}
 	
 	public static void deleteFileIfExists(String filePath) {
