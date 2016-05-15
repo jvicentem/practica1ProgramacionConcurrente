@@ -1,4 +1,4 @@
-package practica1PC;
+package practica1PC.utils;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -18,14 +18,15 @@ public class FileAndFolderUtils {
 	public static void createFolder(String path) {
 		File folder = new File(path);
 		
-		if(folder.isDirectory()){
+		if (folder.isDirectory()) {
 			try {
 				FileUtils.forceDelete(folder);
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-			folder.mkdirs();
-		}		
+		}	
+		
+		folder.mkdirs();
 	}
 	
 	public static void writeFile(String filePath, String text) throws IOException {
@@ -36,17 +37,17 @@ public class FileAndFolderUtils {
 	}
 	
 	public static void writeAtEndOfFile(String filePath, String text) throws IOException {
-		FileWriter logfile = new FileWriter(filePath, true);
-		BufferedWriter logbw = new BufferedWriter(logfile);
-		logbw.write(text);
-		logbw.newLine();
-		logbw.close();		
+		FileWriter file = new FileWriter(filePath, true);
+		BufferedWriter bw = new BufferedWriter(file);
+		bw.write(text);
+		bw.newLine();
+		bw.close();		
 	}
 	
 	public static void deleteFileIfExists(String filePath) {
-		try{
+		try {
 			Files.deleteIfExists(Paths.get(filePath));
-		} catch(IOException e) {
+		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
@@ -60,7 +61,7 @@ public class FileAndFolderUtils {
 	public static BufferedReader openFile(String filePath) throws FileNotFoundException {
 		try {
 			return new BufferedReader(new FileReader(filePath));
-		} catch(FileNotFoundException e) {
+		} catch (FileNotFoundException e) {
 			throw e;
 		}
 	}

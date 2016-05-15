@@ -1,8 +1,11 @@
-package practica1PC;
+package practica1PC.modules.threads;
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.util.concurrent.Semaphore;
+
+import practica1PC.modules.Downloader;
+import practica1PC.utils.FileAndFolderUtils;
 
 public class ThreadFactory {
 	private String fileName;
@@ -27,7 +30,7 @@ public class ThreadFactory {
 	public DownloaderThreadAction createActionThread(String threadName) {
 		try {
 			createDownloaderObject();
-		} catch(FileNotFoundException e) {
+		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}
 		
@@ -37,7 +40,7 @@ public class ThreadFactory {
 	public DownloaderThreadStatus createStatusThread(String threadName) {
 		try {
 			createDownloaderObject();
-		} catch(FileNotFoundException e) {		
+		} catch (FileNotFoundException e) {		
 			e.printStackTrace();
 		}
 		
@@ -45,7 +48,7 @@ public class ThreadFactory {
 	}
 	
 	private void createDownloaderObject() throws FileNotFoundException {
-		if(getFile() == null) {
+		if (getFile() == null) {
 			try {
 				setFile(FileAndFolderUtils.openFile(getfileName()));
 			} catch(FileNotFoundException e) {
