@@ -14,7 +14,8 @@
 
 - Para descargar las páginas web vamos a utilizar la librería Jsoup. Se trata de una librería Java que permite establecer conexiones HTTP para analizar el documento HTML contenido en la página. El siguiente código indica cómo establecer una conexión:
 
-```// Creates a connection to a given url 
+```java
+// Creates a connection to a given url 
 Connection conn = Jsoup.connect(url); 
 try {      
 	// Performs the connection and retrieves the response Response 
@@ -40,13 +41,17 @@ try {
 
 - La clase WebProcessor debe encargarse de toda la lógica del programa. Para ello, creará y destruirá los threads que consideres oportunos. El constructor de la clase tendrá la siguiente cabecera:
 
-```public WebProcessor(String path, int nDown, int maxDown);```
+```java
+public WebProcessor(String path, int nDown, int maxDown);
+```
 
 donde  path  será  la  ruta  hacia  el  directorio  donde  se  almacenarán  las  páginas  web descargadas, nDown será  el  número  de  procesos  de  descarga  que  lanzará  la  aplicación,  y maxDown ndicará  el  máximo  número  de  procesos  que  pueden  descargar  webs simultáneamente.
 
 Además, la clase deberá presentar un método con la siguiente cabecera:
 
-```public void process(String fileName);```
+```java
+public void process(String fileName);
+```
 
 que recibirá como parámetro el nombre del fichero que queremos procesar. Dicho fichero contendrá una URL completa en cada línea. El método process abrirá el fichero de entrada de  manera  que  cada  proceso  de  descarga  irá  leyendo  líneas  del  mismo  para  conocer  la siguiente web a descargar.
 
