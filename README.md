@@ -20,7 +20,7 @@ Connection conn = Jsoup.connect(url);
 try {      
 	// Performs the connection and retrieves the response Response 
     resp = conn.execute(); // If the response is different from 200 OK, 
-    						// the website is not reachable 
+    			   // the website is not reachable 
     if (resp.statusCode() != 200) { 
     	System.out.println("Todo bien"); 
     } 
@@ -30,7 +30,8 @@ try {
     
 } catch (IOException e) { 
 	System.out.println("No se puede conectar"); 
-}```
+}
+```
 
 
  Una vez nos hemos asegurado de que la conexión es correcta y la web es alcanzable, podemos utilizar Jsoup para descargar el contenido html asociado:
